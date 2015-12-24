@@ -32,7 +32,6 @@ public class CoinbaseDownloader extends Downloader {
 	}
 	
 	public void run() {
-		// Raw array returned from Coinbase, cf. Wikimedia object
 		Double[][] results = (Double[][]) KDBDownloadTool.JSONAPIService.getObject(finalURLString, Double[][].class);
 		// Connect to KDB, add table if not already present, then save data
 		try {
@@ -42,8 +41,8 @@ public class CoinbaseDownloader extends Downloader {
 			while (it.hasNext()) {
 				Double[] values = it.next();
 				// Parse date
-				Long epochMillis = 1000*Math.round(values[0]); // Decimal SECONDS since epoch, not millis
-				java.util.Date d = new java.util.Date(epochMillis);
+				Long epoch = 1000*Math.round(values[0]); // Decimal SECONDS since epoch, not millis
+				java.util.Date d = new java.util.Date(epoch);
 				// Send to KDB
 				log.info("About to send "+Arrays.toString(values)+" (timestamp "+d.toString()+")");
 				Object[] data = new Object[] {d, values[1], values[2], values[3], values[4], values[5]};
