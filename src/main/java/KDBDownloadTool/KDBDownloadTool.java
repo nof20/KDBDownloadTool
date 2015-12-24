@@ -9,7 +9,6 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import KDBDownloadTool.c.KException;
-import wikipedia.*;
 
 public class KDBDownloadTool {
 
@@ -20,7 +19,6 @@ public class KDBDownloadTool {
 		String kdbHost;
 		Integer kdbPort;
 		c c = null;
-		String builderType;
 		
 		log.info("Starting up KDB Download Tool...");
 		// Load logging properties
@@ -47,7 +45,6 @@ public class KDBDownloadTool {
 			log.severe("Caught IOException trying to load properties: "+e.getMessage());
 			e.printStackTrace();
 		}
-		builderType = props.getProperty("builderType");
 		
 		// Connect to KDB or fail fast
 		kdbHost = props.getProperty("kdbHost");
