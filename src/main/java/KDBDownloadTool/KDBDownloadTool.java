@@ -3,11 +3,13 @@ package KDBDownloadTool;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Properties;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import KDBDownloadTool.c.KException;
+import wikipedia.*;
 
 public class KDBDownloadTool {
 
@@ -48,7 +50,6 @@ public class KDBDownloadTool {
 		builderType = props.getProperty("builderType");
 		
 		// Connect to KDB or fail fast
-
 		kdbHost = props.getProperty("kdbHost");
 		kdbPort = Integer.parseInt(props.getProperty("kdbPort"));
 		log.info("Connecting to KDB at "+kdbHost+":"+kdbPort);
@@ -63,14 +64,28 @@ public class KDBDownloadTool {
 			e.printStackTrace();
 		}
 		
-		switch (builderType) {
-		case "Wikipedia":
-			Wikipedia.WikipediaDownloader w = new Wikipedia.WikipediaDownloader(props, c);
-			w.run();
-			break;
-			
+		// Kick off process-specific object
+		String objType = props.getProperty("builderType");
+		log.info("Instantiating "+objType);
+		try {
+			Class<?> cl = Class.forName(objType);
+			Constructor<?> cons = cl.getConstructor(Properties.class, c.class);
+			cons.setAccessible(true);
+			Downloader d = (Downloader) cons.newInstance(props, c);
+			d.run();
+		} catch (Exception e) {
+			log.severe("Failed to instantiate builderType:");
+			e.printStackTrace();
+		} 
+
+		log.info("Closing KDB connection...");
+		try {
+			c.close();
+			log.info("Closed.");
+		} catch (IOException e) {
+			log.severe("An IOException was thrown:");
+			e.printStackTrace();
 		}
-		
 
 		
 

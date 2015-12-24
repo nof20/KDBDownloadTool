@@ -1,4 +1,4 @@
-package Wikipedia;
+package wikipedia;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -7,9 +7,10 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import KDBDownloadTool.Downloader;
 import KDBDownloadTool.c;
 
-public class WikipediaDownloader {
+public class WikipediaDownloader extends Downloader {
 
 	final static Logger log = Logger.getLogger("WikipediaDownloader");
 	
@@ -19,12 +20,11 @@ public class WikipediaDownloader {
 	String startDate;
 	String endDate;
 	String finalURLString;
-	String kdbHost;
-	Integer kdbPort;
 	String kdbTable;
 	c c;
 	
 	public WikipediaDownloader(Properties props, c c) {
+		super(props, c);
 		baseURLString = props.getProperty("wikipedia.baseURLString");
 		pageName = props.getProperty("wikipedia.pageName");
 		frequency = props.getProperty("wikipedia.frequency");
@@ -39,7 +39,8 @@ public class WikipediaDownloader {
 		ItemList il = (ItemList) KDBDownloadTool.JSONAPIService.getObject(finalURLString, ItemList.class);
 		// Connect to KDB, add table if not already present, then save data
 		try {
-			c.k("$[`Wikipedia in key `.;;(Wikipedia:([project:`$();article:`$();granularity:`$();timestamp:`datetime$();access:`$();agent:`$()]vws:`long$());)]");
+			// NB Table name is parameterized, but schema isn't, because mapping to POJO must be maintained
+			c.k("$[`"+kdbTable+" in key `.;;("+kdbTable+":([project:`$();article:`$();granularity:`$();timestamp:`datetime$();access:`$();agent:`$()]vws:`long$());)]");
 			Iterator<Item> it = il.items.iterator();
 			while (it.hasNext()) {
 				Item i = it.next();
@@ -56,7 +57,6 @@ public class WikipediaDownloader {
 				Object[] updArray = new Object[] {".u.upd", kdbTable, data};
 				c.ks(updArray);
 			}
-			c.close();
 		} catch (Exception e) {
 			log.severe(e.getMessage());
 			e.printStackTrace();

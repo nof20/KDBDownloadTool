@@ -1,4 +1,4 @@
-package Wikipedia;
+package wikipedia;
 
 import java.util.ArrayList;
 

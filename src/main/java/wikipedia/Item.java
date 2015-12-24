@@ -1,4 +1,4 @@
-package Wikipedia;
+package wikipedia;
 
 public class Item {
 	
