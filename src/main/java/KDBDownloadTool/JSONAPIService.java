@@ -21,11 +21,13 @@ public class JSONAPIService {
 		try {
 			URL url = new URL(URLString);
 			URLConnection uc = url.openConnection();
-			uc.setRequestProperty("Accept-Charset", java.nio.charset.StandardCharsets.UTF_8.name());
-			uc.setRequestProperty("Accept", "application/json");
-			uc.setRequestProperty("User-Agent", "KDBDownloadTool (http://github.com/nof20/KDBDownloadTool)");
+			//uc.setRequestProperty("Accept-Charset", java.nio.charset.StandardCharsets.UTF_8.name());
+			//uc.setRequestProperty("Accept", "application/json");
+			//uc.setRequestProperty("User-Agent", "KDBDownloadTool (http://github.com/nof20/KDBDownloadTool)");
 			BufferedReader in = new BufferedReader(new InputStreamReader(uc.getInputStream()));
-			o = gson.fromJson(in.readLine(), cl);
+			String line = in.readLine();
+			log.info("Received: "+line);
+			o = gson.fromJson(line, cl);
 		} catch (MalformedURLException e) {
 			log.severe(e.getMessage());
 			e.printStackTrace();

@@ -1,6 +1,6 @@
 package coinbase;
 
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Properties;
@@ -43,10 +43,10 @@ public class CoinbaseDownloader extends Downloader {
 				Double[] values = it.next();
 				// Parse date
 				Long epochMillis = Math.round(values[0]);
-				Timestamp t = new Timestamp(epochMillis);
+				Date d = new Date(epochMillis);
 				// Send to KDB
-				log.info("About to send "+Arrays.toString(values)+" (timestamp "+t.toString()+")");
-				Object[] data = new Object[] {t, values[1], values[2], values[3], values[4], values[5]};
+				log.info("About to send "+Arrays.toString(values)+" (timestamp "+d.toString()+")");
+				Object[] data = new Object[] {d, values[1], values[2], values[3], values[4], values[5]};
 				Object[] updArray = new Object[] {".u.upd", kdbTable, data};
 				c.ks(updArray);
 			}

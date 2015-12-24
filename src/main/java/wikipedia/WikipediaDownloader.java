@@ -41,7 +41,8 @@ public class WikipediaDownloader extends Downloader {
 		try {
 			// NB Table name is parameterized, but schema isn't, because mapping to POJO must be maintained
 			c.k("$[`"+kdbTable+" in key `.;;("+kdbTable+":([project:`$();article:`$();granularity:`$();timestamp:`datetime$();access:`$();agent:`$()]vws:`long$());)]");
-			Iterator<Item> it = il.list.iterator();
+			Iterator<Item> it = il.items.iterator();
+			log.info("Processing "+il.items.size()+" objects...");
 			while (it.hasNext()) {
 				Item i = it.next();
 				log.info("About to send "+i.toString());

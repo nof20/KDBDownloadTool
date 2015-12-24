@@ -4,14 +4,14 @@ import java.util.ArrayList;
 
 public class ItemList {
 
-	ArrayList<Item> list;
+	ArrayList<Item> items;
 	
 	ItemList() {
-		this.list = new ArrayList<Item>();
+		this.items = new ArrayList<Item>();
 	}
 	
-	ItemList(ArrayList<Item> list) {
-		this.list = list;
+	ItemList(ArrayList<Item> items) {
+		this.items = items;
 	}
 	
 }
