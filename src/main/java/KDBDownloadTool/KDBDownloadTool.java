@@ -1,4 +1,8 @@
+package KDBDownloadTool;
+
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -7,6 +11,8 @@ import java.net.URLConnection;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Properties;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.text.SimpleDateFormat;
 
@@ -14,9 +20,48 @@ import com.google.gson.Gson;
 
 public class KDBDownloadTool {
 
+	final static Logger log = Logger.getLogger("KDBDownloadTool");
+	
 	public static void main(String[] args) {
-		// Setup variables and logging
-		final Logger log = Logger.getLogger("WikimediaStatsDownload");
+		
+		String builderType;
+		
+		log.info("Starting up KDB Download Tool...");
+		// Load logging properties
+		try {
+			FileInputStream fis =  new FileInputStream("logging.properties");
+			LogManager.getLogManager().readConfiguration(fis);
+		    fis.close();
+		} catch (FileNotFoundException e) {
+			log.severe("Cannot find logging properties file: "+e.getMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			log.severe("Caught IOException trying to load logging properties: "+e.getMessage());
+			e.printStackTrace();
+		}
+		
+		// Load properties
+		Properties props = new Properties();
+		try {
+			props.load(new FileInputStream("KDBDownloadTool.properties"));
+		} catch (FileNotFoundException e) {
+			log.severe("Cannot find properties file: "+e.getMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			log.severe("Caught IOException trying to load properties: "+e.getMessage());
+			e.printStackTrace();
+		}
+		builderType = props.getProperty("builderType");
+		
+		switch (builderType) {
+		case "Wikipedia":
+			Wikipedia.WikipediaDownloader w = new Wikipedia.WikipediaDownloader(props);
+			break;
+			
+		}
+		
+		
+		
 		final String baseURLString = "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/all-agents";
 		final String pageName = "Bitcoin";
 		final String frequency = "daily";
@@ -31,24 +76,7 @@ public class KDBDownloadTool {
 		
 		ItemList il = new ItemList();
 		
-		// Call REST API
-		String finalURLString = baseURLString + "/" + pageName + "/" + frequency + "/" + startDate + "/" + endDate;
-		log.info("About to poll URL: "+finalURLString);
-		try {
-			URL url = new URL(finalURLString);
-			URLConnection uc = url.openConnection();
-			uc.setRequestProperty("Accept-Charset", java.nio.charset.StandardCharsets.UTF_8.name());
-			uc.setRequestProperty("Accept", "application/json");
-			uc.setRequestProperty("User-Agent", "WikimediaStatsDownload (http://github.com/nof20/WikimediaStatsDownload)");
-			BufferedReader in = new BufferedReader(new InputStreamReader(uc.getInputStream()));
-			il = gson.fromJson(in.readLine(), ItemList.class);
-		} catch (MalformedURLException e) {
-			log.severe(e.getMessage());
-			e.printStackTrace();
-		} catch (IOException e) {
-			log.severe(e.getMessage());
-			e.printStackTrace();
-		}
+
 		
 		// Connect to KDB, add table if not already present, then save data
 		try {
