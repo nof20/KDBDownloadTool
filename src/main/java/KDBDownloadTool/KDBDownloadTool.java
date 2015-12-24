@@ -1,22 +1,13 @@
 package KDBDownloadTool;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.text.SimpleDateFormat;
 
-import com.google.gson.Gson;
+import KDBDownloadTool.c.KException;
 
 public class KDBDownloadTool {
 
@@ -24,6 +15,9 @@ public class KDBDownloadTool {
 	
 	public static void main(String[] args) {
 		
+		String kdbHost;
+		Integer kdbPort;
+		c c = null;
 		String builderType;
 		
 		log.info("Starting up KDB Download Tool...");
@@ -53,56 +47,32 @@ public class KDBDownloadTool {
 		}
 		builderType = props.getProperty("builderType");
 		
+		// Connect to KDB or fail fast
+
+		kdbHost = props.getProperty("kdbHost");
+		kdbPort = Integer.parseInt(props.getProperty("kdbPort"));
+		log.info("Connecting to KDB at "+kdbHost+":"+kdbPort);
+		try {
+			c = new c(kdbHost, kdbPort);
+			c.k(".u.upd:upsert");
+		} catch (KException e) {
+			log.severe("A KException was thrown:");
+			e.printStackTrace();
+		} catch (IOException e) {
+			log.severe("An IOException was thrown:");
+			e.printStackTrace();
+		}
+		
 		switch (builderType) {
 		case "Wikipedia":
-			Wikipedia.WikipediaDownloader w = new Wikipedia.WikipediaDownloader(props);
+			Wikipedia.WikipediaDownloader w = new Wikipedia.WikipediaDownloader(props, c);
+			w.run();
 			break;
 			
 		}
 		
-		
-		
-		final String baseURLString = "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/all-agents";
-		final String pageName = "Bitcoin";
-		final String frequency = "daily";
-		final String startDate = "20150601";
-		final String endDate = "20151215";
-		final String kdbTable = "Wikipedia";
-		final String kdbHost = "localhost";
-		final Integer kdbPort = 2001;
-		
-		Gson gson = new Gson();
-		c c = new c();
-		
-		ItemList il = new ItemList();
-		
 
 		
-		// Connect to KDB, add table if not already present, then save data
-		try {
-			c = new c(kdbHost, kdbPort);
-			c.k("$[`Wikipedia in key `.;;(Wikipedia:([project:`$();article:`$();granularity:`$();timestamp:`datetime$();access:`$();agent:`$()]vws:`long$());)]");
-			c.k(".u.upd:upsert");
-			Iterator<Item> it = il.items.iterator();
-			while (it.hasNext()) {
-				Item i = it.next();
-				log.info("About to send "+i.toString());
-				// Parse date
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-				String shortDateString = i.timestamp.substring(0, 8);
-				Date date = sdf.parse(shortDateString);
-				Calendar cal = Calendar.getInstance();
-				cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(i.timestamp.substring(8, 10)));
-				cal.setTime(date);
-				// Send to KDB
-				Object[] data = new Object[] {i.project, i.article, i.granularity, date, i.access, i.agent, i.views};
-				Object[] updArray = new Object[] {".u.upd", kdbTable, data};
-				c.ks(updArray);
-			}
-			c.close();
-		} catch (Exception e) {
-			log.severe(e.getMessage());
-			e.printStackTrace();
-		}
+
 	}
 }
