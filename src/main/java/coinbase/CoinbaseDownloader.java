@@ -1,5 +1,6 @@
 package coinbase;
 
+import java.sql.Time;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -35,7 +36,7 @@ public class CoinbaseDownloader extends Downloader {
 	public void run() {
 		// Check KDB table exists
 		try {
-			c.k("$[`"+kdbTable+" in key `.;;("+kdbTable+":([time:`datetime$()]low:`float$();high:`float$();open:`float$();close:`float$();volume:`float$());)]");
+			c.k("$[`"+kdbTable+" in key `.;;("+kdbTable+":([]date:`date$();time:`time$();sym:`$();low:`float$();high:`float$();open:`float$();close:`float$();volume:`float$());)]");
 		} catch (Exception e1) {
 			log.severe("Caught an error checking for KDB table:");	
 			e1.printStackTrace();
@@ -65,12 +66,14 @@ public class CoinbaseDownloader extends Downloader {
 				Iterator<Double[]> it = Arrays.asList(results).iterator();
 				while (it.hasNext()) {
 					Double[] values = it.next();
-					// Parse date
-					Long epoch = 1000*Math.round(values[0]); // Decimal SECONDS since epoch, not millis
-					java.util.Date d = new java.util.Date(epoch);
+					// Parse date and time
+					Long secsSinceEpoch = 1000*Math.round(values[0]); // Decimal SECONDS since epoch, not millis
+					//Long millisSinceEpoch = Math.round(values[0]);
+					java.sql.Date d = new java.sql.Date(secsSinceEpoch);
+					java.sql.Time t = new java.sql.Time(secsSinceEpoch);
 					// Send to KDB
 					//log.info("About to send "+Arrays.toString(values)+" (timestamp "+d.toString()+")");
-					Object[] data = new Object[] {d, values[1], values[2], values[3], values[4], values[5]};
+					Object[] data = new Object[] {d, t, "BTC-USD", values[1], values[2], values[3], values[4], values[5]};
 					Object[] updArray = new Object[] {".u.upd", kdbTable, data};
 					c.ks(updArray);
 				}
