@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
@@ -64,7 +65,7 @@ public class AlchemyDataNewsDownloader extends Downloader {
 		Long endEpoch = Math.round((double) endInstant.toEpochMilli() / 1000L);
 		
 		// Build final URL
-		finalURLString = baseURLString + "?apikey=" + apiKey + "&return=" + RETURN_FIELDS + "&start=" + startEpoch + "&end=" + endEpoch + "&q.enriched.url.cleanedTitle=" + topic + "&outputMode=json";
+		finalURLString = baseURLString + "?apikey=" + apiKey + "&return=" + RETURN_FIELDS + "&start=" + startEpoch + "&end=" + endEpoch + "&q.enriched.url.cleanedTitle=" + topic + "&outputMode=json&count=100";
 		this.c = c;
 	}
 
@@ -95,10 +96,18 @@ public class AlchemyDataNewsDownloader extends Downloader {
 					Document d = it.next();
 					// Map explicit data types
 					Boolean docSentimentMixed = (d.source.enriched.url.enrichedTitle.docSentiment.mixed == 1) ? true : false;
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-					Date publicationDate = sdf.parse(d.source.enriched.url.publicationDate.date);
-					java.sql.Date sqlDate = new java.sql.Date(publicationDate.getTime()); // Date component only
-					java.sql.Time sqlTime = new java.sql.Time(publicationDate.getTime()); // Time component only
+					Object sqlDate;
+					Object sqlTime;
+					try {
+						SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
+						Date publicationDate = sdf.parse(d.source.enriched.url.publicationDate.date);
+						sqlDate = new java.sql.Date(publicationDate.getTime()); // Date component only
+						sqlTime = new java.sql.Time(publicationDate.getTime()); // Time component only
+					} catch (ParseException e) {
+						log.info("Publication date '"+d.source.enriched.url.publicationDate.date+"' invalid, substituting NULL");
+						sqlDate = KDBDownloadTool.c.NULL('d');
+						sqlTime = KDBDownloadTool.c.NULL('t');
+					}
 					Date timestamp = new Date(1000L * d.timestamp);
 									
 					// Send to KDB
